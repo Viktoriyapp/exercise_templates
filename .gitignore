@@ -1,0 +1,14 @@
+# PyCharm / IntelliJ
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+.env
+
+# Django
+db.sqlite3
