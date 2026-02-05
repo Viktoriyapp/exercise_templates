@@ -5,7 +5,12 @@
 {% block content %}
 <div class="container">
     <h1 class="mb-4">{{ page_title }}</h1>
+    <a href="{% url 'reviews:create' %}" class="btn btn-success mb-3">Add Review</a>
     <div class="row">
+        <form>
+            {{ search_form }}
+            <button>Search</button>
+        </form>
         {% for b in books %}
             <div class="col-md-4 mb-4">
                 <div class="card">

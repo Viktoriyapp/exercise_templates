@@ -29,6 +29,7 @@ class Book(TimeStampModel):
     )
     pages = models.PositiveIntegerField(null=True, blank=True)
     publisher = models.CharField(max_length=100)
+    tags = models.ManyToManyField('Tag')
 
     #logic for slug we do on saving
     def save(self, *args, **kwargs) -> None:
@@ -36,3 +37,20 @@ class Book(TimeStampModel):
             self.slug = slugify(f'{self.title}-{self.publisher}')
 
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+    # def __repr__(self):
+    #     return self.title
+
+
+class Tag(models.Model):
+    name = models.CharField(max_length=50)
+    books = models.ManyToManyField(Book)
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name

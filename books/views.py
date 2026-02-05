@@ -1,8 +1,8 @@
-from django.db.models import Avg
+from django.db.models import Avg, Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
-from books.forms import BookFormBasic
+from books.forms import BookFormBasic, BookEditForm, BookDeleteForm, BookCreateForm, BookSearchForm
 from books.models import Book
 
 
@@ -21,12 +21,20 @@ def landing_page(request: HttpRequest) -> HttpResponse:
     return render(request, 'books/landing_page.html', context)
 
 def books_list(request: HttpRequest) -> HttpResponse:
+    search_form = BookSearchForm(request.GET or None)
+
     list_books = Book.objects.annotate(avg_rating=Avg('reviews__rating')
         ).order_by('title')
+
+    if 'query' in request.GET: # if there is something in this dict
+        if search_form.is_valid():
+            list_books = list_books.filter(Q(title__icontains=search_form.cleaned_data['query']) |
+                                           Q(description__icontains=search_form.cleaned_data['query']))
 
     context = {
         'books': list_books,
         'page_title': 'Dashboard',
+        'search_form': search_form,
     }
     return render(request, 'books/list.html', context)
 
@@ -44,7 +52,7 @@ def book_detail(request: HttpRequest, slug: str) -> HttpResponse:
     return render(request, 'books/detail.html', context)
 
 def book_create(request: HttpRequest) -> HttpResponse:
-    form = BookFormBasic(request.POST or None)
+    form = BookCreateForm(request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():
@@ -59,3 +67,33 @@ def book_create(request: HttpRequest) -> HttpResponse:
         'form': form,
     }
     return render(request, 'books/create.html', context)
+
+def book_edit(request: HttpRequest, pk: int) -> HttpResponse:
+    book = Book.objects.get(pk=pk)
+    form = BookEditForm(request.POST or None, instance=book)
+    #instance is only for ModelForms; thats how we change that exact instance of a book
+
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            return redirect('books:home')
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'books/edit.html', context)
+
+def book_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    book = Book.objects.get(pk=pk)
+    form = BookDeleteForm(request.POST or None, instance=book)
+    #instance is only for ModelForms; thats how we change that exact instance of a book
+
+    if request.method == 'POST':
+        if form.is_valid():
+            book.delete() #form doesnt have delete method, so we take the instance and delete it
+            return redirect('books:home')
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'books/delete.html', context)
