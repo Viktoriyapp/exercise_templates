@@ -1,7 +1,8 @@
 from django.db.models import Avg
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 
+from books.forms import BookFormBasic
 from books.models import Book
 
 
@@ -41,3 +42,20 @@ def book_detail(request: HttpRequest, slug: str) -> HttpResponse:
     }
 
     return render(request, 'books/detail.html', context)
+
+def book_create(request: HttpRequest) -> HttpResponse:
+    form = BookFormBasic(request.POST or None)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            # Book.objects.create( # this method for forms.Form
+            #     **form.cleaned_data, # unpack and fill the form fields from the cleaned data
+            # )
+            form.save() # this method for forms.ModelForm; we dont need to create an instance
+
+            return redirect('books:home')
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'books/create.html', context)
