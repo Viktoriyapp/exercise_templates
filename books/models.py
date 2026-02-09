@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 
+from books.validators import range_validator2, RangeValidator
 from common.models import TimeStampModel
 
 
@@ -16,7 +17,13 @@ class Book(TimeStampModel):
         MYSTERY = 'Mystery', 'Mystery'
 
     title = models.CharField(max_length=100, unique=True)
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        validators=[
+            RangeValidator(0, 1000, 'Price should be in the range 0-1000')
+            ],
+        )
     isbn = models.CharField(max_length=12, unique=True)
     genre = models.CharField(max_length=50, choices=GenreChoices.choices)
     publishing_date = models.DateField()

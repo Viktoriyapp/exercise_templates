@@ -54,6 +54,13 @@ class BookFormBasic(forms.ModelForm):
         exclude = ['slug',]
         model = Book
 
+        error_messages = {
+            'title': {
+                'max_length': 'Title is way too long.',
+                'required': 'Please enter the title.',
+            },
+        }
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.fields['tags'].queryset = Tag.objects.all()
@@ -64,7 +71,6 @@ class BookCreateForm(BookFormBasic):
         help_texts = {
             'isbn': 'International Standard Book Number',
         }
-
 
 
 class BookEditForm(BookFormBasic):
