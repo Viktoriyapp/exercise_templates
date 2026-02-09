@@ -1,4 +1,5 @@
 from django.db.models import Avg, Q
+from django.forms import modelform_factory
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
@@ -52,7 +53,12 @@ def book_detail(request: HttpRequest, slug: str) -> HttpResponse:
     return render(request, 'books/detail.html', context)
 
 def book_create(request: HttpRequest) -> HttpResponse:
-    form = BookCreateForm(request.POST or None)
+    if request.user.is_staff:
+        BookForm = modelform_factory(Book,fields='__all__',)
+    else:
+        BookForm = modelform_factory(Book,exclude=('slug',))
+
+    form = BookForm(request.POST or None)
 
     if request.method == 'POST':
         if form.is_valid():

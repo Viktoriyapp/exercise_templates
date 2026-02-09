@@ -1,6 +1,8 @@
+from django.forms import modelformset_factory
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
+from books.models import Book
 from reviews.forms import ReviewCreateForm, ReviewEditForm, ReviewDeleteForm
 from reviews.models import Review
 
@@ -44,6 +46,37 @@ def review_create(request: HttpRequest) -> HttpResponse:
     }
 
     return render(request, 'reviews/create.html', context)
+
+def review_bulk_update(request: HttpRequest, book_slug: str) -> HttpResponse:
+    book = get_object_or_404(Book, slug=book_slug) #We take our book
+    ReviewFormSet = modelformset_factory(
+        Review,
+        form=ReviewEditForm, # This is our form
+        can_delete=True, # The form can delete records/gives us a delete check
+        extra=1, # 1 additional empty form
+    )
+    formset = ReviewFormSet(
+        request.POST or None,
+        queryset=Review.objects.filter(book=book), #the queryset that it should fill with
+    )
+
+    if request.method == 'POST' and formset.is_valid():
+        instances = formset.save(commit=False) # all objects / queryset of all objects of the forms
+        for ins in instances:
+            ins.book = book
+            ins.save()
+        for ins in formset.deleted_objects:
+            ins.delete()
+
+        return redirect('reviews:list')
+
+    context = {
+        'book': book,
+        'formset': formset,
+    }
+
+    return render(request, 'reviews/formset_edit.html', context)
+
 
 def review_edit(request: HttpRequest, pk: int) -> HttpResponse:
     review = get_object_or_404(Review, pk=pk)

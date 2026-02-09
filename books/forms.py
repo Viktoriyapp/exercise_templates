@@ -1,7 +1,10 @@
 from datetime import date
 from typing import Any
 
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Submit
 from django import forms
+from django.core.exceptions import ValidationError
 
 from books.models import Book, Tag
 from common.mixins import DisableFormFieldsMixin
@@ -61,9 +64,42 @@ class BookFormBasic(forms.ModelForm):
             },
         }
 
+    #For 1 field
+    def clean_isbn(self) -> None: # we dont need value here next to the self, we take the needed value like this
+        #Validators start before the clean method, bcs validators are for logical validations on the fields for users
+        #Clean methods are for business logic validations
+        if self.cleaned_data['isbn'].startswith('978'):
+            raise ValidationError('ISBN cannot start with 978')
+
+    #For more fields
+    def clean(self) -> dict:
+        cleaned = super().clean()
+
+        genre = cleaned.get('genre')
+        pages = cleaned.get('pages')
+
+        if pages < 10 and genre == Book.GenreChoices.FICTION:
+            raise ValidationError(f'Book of type {Book.GenreChoices.FICTION} cannot be less than 10 pages')
+        return cleaned
+
+    def save(self, commit = True):
+        if self.publisher:
+            self.publisher = self.publisher.capitalize()
+
+        if commit:
+            self.instance.save()
+        return self.instance
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.fields['tags'].queryset = Tag.objects.all()
+        self.helper = FormHelper()
+        self.helper.form_id = 'id-exampleForm'
+        self.helper.form_class = 'blueForms'
+        self.helper.form_method = 'post'
+        self.helper.form_action = 'submit_survey'
+
+        self.helper.add_input(Submit('submit', 'Submit'))
 
 
 class BookCreateForm(BookFormBasic):
