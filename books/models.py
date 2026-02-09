@@ -25,6 +25,7 @@ class Book(TimeStampModel):
             ],
         )
     isbn = models.CharField(max_length=12, unique=True)
+    cover_image = models.ImageField(null=True, blank=True)
     genre = models.CharField(max_length=50, choices=GenreChoices.choices)
     publishing_date = models.DateField()
     description = models.TextField()

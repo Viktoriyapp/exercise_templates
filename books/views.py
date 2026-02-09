@@ -58,7 +58,7 @@ def book_create(request: HttpRequest) -> HttpResponse:
     else:
         BookForm = modelform_factory(Book,exclude=('slug',))
 
-    form = BookForm(request.POST or None)
+    form = BookForm(request.POST or None, request.FILES or None)
 
     if request.method == 'POST':
         if form.is_valid():
